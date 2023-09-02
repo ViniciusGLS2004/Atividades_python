@@ -3,7 +3,7 @@ import mysql.connector
 cs = mysql.connector.connect(
     host='localhost',
     user='root',
-    password='odeiolol',
+    password='odeiolol', # senha do seu banco de dados
     database='cs_veiculo'
 )
 
@@ -32,9 +32,16 @@ class Veiculo:
             'vei_num_placa, vei_tipo_combustivel, vei_direcao, vei_marca, vei_modelo, vei_tipo_desempenho, vei_desempenho, vei_preco) '
             'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
         )
+        # '%s' são espaços reservados que serão preenchidos com valores. Cada %s representa uma coluna na tabela.
+
+        #valores: Esta é uma tupla que contém os valores que serão inseridos nas colunas da tabela. Cada valor na tupla corresponde a um espaço reservado %s na instrução comando.
         valores = (self.tipo, self.cor, self.ano, self.estado, self.rodados, self.leilao, self.placa,
                    self.combustivel, self.direcao, self.marca, self.modelo, self.tipo_desempenho, self.desempenho, self.preco)
+
+        # O comando é a string SQL com espaços reservados, e os valores são fornecidos para preencher esses espaços reservados.
         cursor.execute(comando, valores)
+
+        #cs.commit(): Após a execução bem-sucedida da instrução INSERT, é necessário confirmar a transação usando commit()
         cs.commit()
 
         comando = f'SELECT * FROM veiculo'  # codigo para printar os dados da tabela
@@ -135,7 +142,7 @@ vei_ano = int(input("Digite o ano do veiculo:\n"))
 vei_estado = input("Digite o estado do veiculo:\n")
 vei_kmrodados = float(input("Digite os km rodados do veiculo:\n"))
 vei_leilao = input("Digite (sim ou nao) se o veiculo é ou não de leilao :\n")
-vei_num_placa = int(input("Digite o numero da placa do veiculo:\n"))
+vei_num_placa = (input("Digite o numero da placa do veiculo:\n"))
 vei_tipo_combustivel = input("Digite o tipo do combust ivel do veiculo:\n")
 vei_direcao = input("Digite a direção do veiculo:\n")
 vei_marca = input("Digite a marca do veiculo:\n")
