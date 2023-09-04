@@ -1,16 +1,20 @@
 import mysql.connector
+from PIL import Image
+from io import BytesIO
 
 cs = mysql.connector.connect(
     host='localhost',
     user='root',
-    password='odeiolol', # senha do seu banco de dados
+    password='',  # senha do seu banco de dados
     database='cs_veiculo'
 )
 
 cursor = cs.cursor()
 
+
 class Veiculo:
-    def __init__(self, tipo, cor, ano, estado, kmrodados, leilao, num_placa, tipo_combustivel, direcao, marca, modelo, tipo_desempenho, desempenho, preco):
+    def __init__(self, tipo, cor, ano, estado, kmrodados, leilao, num_placa, tipo_combustivel, direcao, marca, modelo,
+                 tipo_desempenho, desempenho, preco, imagem):
         self.tipo = tipo
         self.cor = cor
         self.ano = ano
@@ -25,23 +29,25 @@ class Veiculo:
         self.tipo_desempenho = tipo_desempenho
         self.desempenho = desempenho
         self.preco = preco
+        self.imagem = imagem
 
     def create(self):
         comando = (
             'INSERT INTO veiculo (vei_tipo, vei_cor, vei_ano, vei_estado, vei_kmrodados, vei_leilao, '
-            'vei_num_placa, vei_tipo_combustivel, vei_direcao, vei_marca, vei_modelo, vei_tipo_desempenho, vei_desempenho, vei_preco) '
-            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+            'vei_placa, vei_tipo_combustivel, vei_direcao, vei_marca, vei_modelo, vei_tipo_desempenho, vei_desempenho, vei_preco, vei_imagem) '
+            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
         )
         # '%s' são espaços reservados que serão preenchidos com valores. Cada %s representa uma coluna na tabela.
 
-        #valores: Esta é uma tupla que contém os valores que serão inseridos nas colunas da tabela. Cada valor na tupla corresponde a um espaço reservado %s na instrução comando.
+        # valores: Esta é uma tupla que contém os valores que serão inseridos nas colunas da tabela. Cada valor na tupla corresponde a um espaço reservado %s na instrução comando.
         valores = (self.tipo, self.cor, self.ano, self.estado, self.rodados, self.leilao, self.placa,
-                   self.combustivel, self.direcao, self.marca, self.modelo, self.tipo_desempenho, self.desempenho, self.preco)
+                   self.combustivel, self.direcao, self.marca, self.modelo, self.tipo_desempenho, self.desempenho,
+                   self.preco, self.imagem)
 
         # O comando é a string SQL com espaços reservados, e os valores são fornecidos para preencher esses espaços reservados.
         cursor.execute(comando, valores)
 
-        #cs.commit(): Após a execução bem-sucedida da instrução INSERT, é necessário confirmar a transação usando commit()
+        # cs.commit(): Após a execução bem-sucedida da instrução INSERT, é necessário confirmar a transação usando commit()
         cs.commit()
 
         comando = f'SELECT * FROM veiculo'  # codigo para printar os dados da tabela
@@ -81,7 +87,7 @@ class Veiculo:
             cs.commit()
 
         elif alter == 7:
-            comando = f'UPDATE veiculo SET vei_num_placa = {alteracao_veiculo} WHERE vei_id = {idveiculo}'
+            comando = f'UPDATE veiculo SET vei_placa = {alteracao_veiculo} WHERE vei_id = {idveiculo}'
             cursor.execute(comando)
             cs.commit()
 
@@ -126,7 +132,7 @@ class Veiculo:
         print(resultado)
 
     def delete(self, nomedelete):
-        comando = f'DELETE FROM veiculo WHERE vei_num_placa = "{nomedelete}"'
+        comando = f'DELETE FROM veiculo WHERE vei_placa = "{nomedelete}"'
         cursor.execute(comando)
         cs.commit()
 
@@ -135,6 +141,30 @@ class Veiculo:
     resultado = cursor.fetchall()  # ler o banco de dados
     print(resultado)
 
+    def adicionar_imagem(self, caminho_imagem):
+        # Abra a imagem com o Pillow
+        imagem = Image.open(caminho_imagem)
+
+        # Faça o processamento da imagem conforme necessário
+
+        # Salve a imagem de volta em BytesIO
+        nova_imagem_bytes = BytesIO()
+        imagem.save(nova_imagem_bytes, format='PNG')  # Substitua 'PNG' pelo formato correto, se necessário
+
+        # Converta os dados da imagem de volta em bytes
+        nova_imagem_bytes = nova_imagem_bytes.getvalue()
+
+        # Atualize a tabela com a nova imagem
+        comando = (
+            'UPDATE veiculo '
+            'SET vei_imagem = %s '
+            'WHERE vei_placa = %s'
+        )
+        valores = (nova_imagem_bytes, self.placa)
+        cursor.execute(comando, valores)
+        cs.commit()
+
+
 # Criação do objeto com seus atributos
 vei_tipo = input("Digite o tipo do veiculo:\n")
 vei_cor = input("Digite a cor do veiculo:\n")
@@ -142,8 +172,8 @@ vei_ano = int(input("Digite o ano do veiculo:\n"))
 vei_estado = input("Digite o estado do veiculo:\n")
 vei_kmrodados = float(input("Digite os km rodados do veiculo:\n"))
 vei_leilao = input("Digite (sim ou nao) se o veiculo é ou não de leilao :\n")
-vei_num_placa = (input("Digite o numero da placa do veiculo:\n"))
-vei_tipo_combustivel = input("Digite o tipo do combust ivel do veiculo:\n")
+vei_placa = input("Digite o numero da placa do veiculo:\n")
+vei_tipo_combustivel = input("Digite o tipo do combustivel do veiculo:\n")
 vei_direcao = input("Digite a direção do veiculo:\n")
 vei_marca = input("Digite a marca do veiculo:\n")
 vei_modelo = input("Digite o modelo do veiculo:\n")
@@ -151,8 +181,21 @@ vei_tipo_desempenho = input("Digite o tipo de desempenho do veiculo:\n")
 vei_desempenho = input("Digite o desempenho do veiculo:\n")
 vei_preco = float(input("Digite o preço do veiculo:\n"))
 
-veiculo = Veiculo(vei_tipo, vei_cor, vei_ano, vei_estado, vei_kmrodados, vei_leilao, vei_num_placa,
-                  vei_tipo_combustivel, vei_direcao, vei_marca, vei_modelo, vei_tipo_desempenho, vei_desempenho, vei_preco)
+# Adicione uma imagem ao veículo
+caminho_imagem = r'C:\Users\Senai\PycharmProjects\python-Iniciante\imagem\jeep.png'  # Substitua pelo caminho da imagem
+with open(caminho_imagem, 'rb') as arquivo_imagem:
+    dados_imagem = arquivo_imagem.read()
+
+# Agora crie o objeto Veiculo após ter os dados da imagem
+veiculo = Veiculo(vei_tipo, vei_cor, vei_ano, vei_estado, vei_kmrodados, vei_leilao, vei_placa,
+                  vei_tipo_combustivel, vei_direcao, vei_marca, vei_modelo, vei_tipo_desempenho, vei_desempenho,
+                  vei_preco, dados_imagem)
+
+# Adicione uma imagem ao veículo
+caminho_imagem = r'C:\Users\Senai\PycharmProjects\python-Iniciante\imagem\jeep.png'  # Substitua pelo caminho da imagem
+with open(caminho_imagem, 'rb') as arquivo_imagem:
+    dados_imagem = arquivo_imagem.read()
+veiculo.adicionar_imagem(caminho_imagem)
 veiculo.create()
 
 alt = input("Deseja fazer alguma alteração na tabela? (sim ou nao):\n")
@@ -193,45 +236,15 @@ while alt == "sim":
 
     alt = input("Deseja fazer alguma alteração na tabela veiculo? (sim ou nao):\n")
 print("Codigo veiculo fechado!")
+
+# Caminho da imagem que você deseja carregar
+caminho_imagem = r'C:\Users\Senai\PycharmProjects\python-Iniciante\imagem\jeep.png'
+
+# Carregar a imagem do caminho fornecido
+imagem = Image.open(caminho_imagem)
+
+# Exibir a imagem
+imagem.show()
+
 cursor.close()
 cs.close()
-
-# CREATE
-# pro_id  = int(input("digite o id do produto:\n"))
-# pro_nome = (input("Digite o nome do produto:\n"))
-# pro_valor = float(input("Digite o valor do produto?:\n"))
-# comando = f'INSERT INTO produto (pro_nome, pro_valor) VALUES ("{pro_nome}", {pro_valor})'
-# cursor.execute(comando)
-# db.commit() # edita o banco de dados
-
-# UPDATE
-
-# pro_nome = "chocolate"
-# pro_valor = 11
-# comando = f'UPDATE produto SET pro_valor = {pro_valor} WHERE pro_nome = "{pro_nome}"'
-# cursor.execute(comando)
-# db.commit() # edita o banco de dados
-
-# comando = f'SELECT * FROM produto'
-# cursor.execute(comando)
-# resultado = cursor.fetchall() # ler o banco de dados
-# print(resultado)
-
-# DELETE
-
-# pro_nome = "bolacha"
-# comando = f'DELETE FROM produto WHERE pro_nome = "{pro_nome}"'
-# cursor.execute(comando)
-# db.commit() # edita o banco de dados
-
-# comando = f'SELECT * FROM produto'
-# cursor.execute(comando)
-# resultado = cursor.fetchall() # ler o banco de dados
-# print(resultado)
-
-# READ
-
-# comando = f'SELECT * FROM produto'
-# cursor.execute(comando)
-# resultado = cursor.fetchall() # ler o banco de dados
-# print(resultado)
